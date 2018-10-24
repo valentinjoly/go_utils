@@ -37,6 +37,9 @@ def add_arguments(parser):
     parser.add_argument(
         '-o', '--output_path', metavar='FILE', default=OUTPUT_PATH,
         help='Output GO tree file. [{}]'.format(OUTPUT_PATH))
+    parser.add_argument(
+        '-h', '--help', action='help',
+        help='Print this help page and exit.')
 
 
 def check_arguments(args):
