@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+
+import argparse
+import sys
+
+import go_utils.make_tree
+import go_utils.convert
+import go_utils.compare
+
+
+def make_parser():
+    parser = argparse.ArgumentParser(
+        description='GO utilities',
+        add_help=False)
+    parser.add_argument(
+        '-h', '--help', action='help',
+        help='Print this help page and exit.')
+    subparsers = parser.add_subparsers(title='Subcommands')
+
+    make_tree_subparser = subparsers.add_parser(
+        'make_tree', add_help=False,
+        help='Make GO tree file.')
+    go_utils.make_tree.add_arguments(make_tree_subparser)
+
+    convert_subparser = subparsers.add_parser(
+        'convert', add_help=False,
+        help='Convert an ANNOT file to a per-sequence TSV table.')
+    go_utils.convert.add_arguments(convert_subparser)
+
+    compare_subparser = subparsers.add_parser(
+        'compare', add_help=False,
+        help='Perform GO term enrichment analyses.')
+    go_utils.compare.add_arguments(compare_subparser)
+
+    return parser
+
+
+if __name__ == '__main__':
+    parser = make_parser()
+    args = parser.parse_args()
+    if args == argparse.Namespace():
+        parser.print_help()
+        sys.exit(0)
+    args.check(args)
+    args.process(args)
