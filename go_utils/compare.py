@@ -28,7 +28,8 @@ MIN_LEVEL = 1
 MAX_LEVEL = None
 MIN_FOLD_CHANGE = 1.5
 MAX_PVALUE = 0.05
-MIN_NB_SEQUENCES = 0
+MIN_SEQ_COUNT = 1
+MIN_SEQ_PROP = 0.0
 LUALATEX_PATH = 'lualatex'
 
 GO_TYPES = ('BP', 'MF', 'CC')
@@ -184,8 +185,11 @@ def add_arguments(parser):
         '-p', '--max_pvalue', type=float, default=MAX_PVALUE,
         help='Maximum Fisher’s Exact Test p-value [{:.2f}]'.format(MAX_PVALUE))
     enrichment_group.add_argument(
-        '-n', '--min_nb_sequences', type=int, default=MIN_NB_SEQUENCES,
-        help='Minimum sequence count [{:d}]'.format(MIN_NB_SEQUENCES))
+        '-n', '--min_seq_count', type=int, default=MIN_SEQ_COUNT,
+        help='Minimum sequence count [{:d}]'.format(MIN_SEQ_COUNT))
+    enrichment_group.add_argument(
+        '-m', '--min_seq_prop', type=float, default=MIN_SEQ_PROP,
+        help='Minimum sequence proportion (%%) [{:.0f}]'.format(MIN_SEQ_PROP))
 
     regulation_group = parser.add_argument_group(
         title='GO terms to be reported [default: -UD]')
@@ -232,8 +236,10 @@ def check_arguments(args):
                             mini=1.0, prefix='-f/--min_fold_change')
     errors += check_num_arg(args.max_pvalue, number_type=float,
                             mini=0.0, maxi=1.0, prefix='-p/--max_pvalue')
-    errors += check_num_arg(args.min_nb_sequences, number_type=int,
-                            mini=0, prefix='-n/--min_nb_sequences')
+    errors += check_num_arg(args.min_seq_count, number_type=int,
+                            mini=0, prefix='-n/--min_seq_count')
+    errors += check_num_arg(args.min_seq_prop, number_type=float,
+                            mini=0.0, maxi=100.0, prefix='-m/--min_seq_prop')
     if args.max_level is not None and args.min_level > args.max_level:
         error = '-l/-L: Max level must be greater than min level.'
         errors.append(error)
@@ -438,8 +444,9 @@ def format_pvalue(pvalue):
 
 
 def process_sample(sample, ref, annot, top_go_id, terms, levels, descriptions,
-                   min_fc, max_pvalue, export_not_reg, export_up_reg,
-                   export_down_reg, pvalue_lookup):
+                   min_seq_count, min_seq_prop, min_fc, max_pvalue,
+                   export_not_reg, export_up_reg, export_down_reg,
+                   pvalue_lookup):
     results = {}
 
     sample_counts = count_seqids(sample, annot)
@@ -454,8 +461,12 @@ def process_sample(sample, ref, annot, top_go_id, terms, levels, descriptions,
         term = terms[go_id]
         level = levels[go_id]
         sample_count = sample_counts[go_id]
+        if sample_count < min_seq_count:
+            continue
         ref_count = ref_counts[go_id]
         sample_perc = compute_perc(sample_count, top_sample_count)
+        if sample_perc < min_seq_prop:
+            continue
         ref_perc = compute_perc(ref_count, top_ref_count)
         if go_id == top_go_id:
             fc, pvalue, reg, key = '', '', '', ''
@@ -629,8 +640,10 @@ def main(args):
         for sample, ref, name in zip(samples, refs, names):
             results, seqids = process_sample(
                 sample, ref, annot, top_go_id, terms, levels,
-                descriptions, args.min_fold_change, args.max_pvalue,
-                args.not_reg, args.up_reg, args.down_reg, pvalue_lookup)
+                descriptions, args.min_seq_count, args.min_seq_prop,
+                args.min_fold_change, args.max_pvalue, args.not_reg,
+                args.up_reg, args.down_reg, pvalue_lookup)
+
             export_results(
                 results, name, go_type, go_type_long, seqids, descriptions,
                 args.output_dir_path, args.output_types, args.lualatex_path)
