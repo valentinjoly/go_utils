@@ -33,7 +33,7 @@ TOP_GO_IDS = ('GO:0008150', 'GO:0003674', 'GO:0005575')
 
 
 def add_arguments(parser):
-    parser.set_defaults(prog=parser.prog, check=check_arguments, process=main)
+    parser.set_defaults(prog=parser.prog, check=check_arguments, main=main)
 
     input_group = parser.add_argument_group(title='Input options')
     input_group.add_argument(
@@ -257,4 +257,4 @@ if __name__ == '__main__':
     add_arguments(parser)
     args = parser.parse_args()
     args.check(args)
-    args.process(args)
+    args.main(args)

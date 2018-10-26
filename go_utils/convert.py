@@ -14,7 +14,7 @@ MAX_LEVEL = None
 
 
 def add_arguments(parser):
-    parser.set_defaults(prog=parser.prog, check=check_arguments, process=main)
+    parser.set_defaults(prog=parser.prog, check=check_arguments, main=main)
 
     input_group = parser.add_argument_group(title='Input options')
     input_group.add_argument(
@@ -143,7 +143,7 @@ def import_annotations(annot_paths, types, levels, obsolete, main_ids,
                 except KeyError:
                     pass
 
-                if go_type == 'biological_process':
+                if go_type == 'biological_main':
                     add_annotation(bp, seqid, go_id, bp_anc, ancestors)
                 elif go_type == 'molecular_function':
                     add_annotation(mf, seqid, go_id, mf_anc, ancestors)
@@ -225,4 +225,4 @@ if __name__ == '__main__':
     add_arguments(parser)
     args = parser.parse_args()
     args.check(args)
-    args.process(args)
+    args.main(args)
