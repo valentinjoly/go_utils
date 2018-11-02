@@ -271,8 +271,13 @@ def get_name_from_path(path):
 
 
 def import_seqids(seqids_path):
+    seqids = set()
     with open_file(seqids_path) as seqids_file:
-        seqids = set([i.strip() for i in seqids_file.readlines() if i])
+        seqids_table = csv.reader(seqids_file, dialect='excel-tab')
+        for row in seqids_table:
+            if not row:
+                continue
+            seqids |= {row[0]}
     return seqids
 
 
@@ -438,8 +443,8 @@ def format_fc(fc):
 
 
 def format_pvalue(pvalue):
-    if pvalue < 0.0001:
-        return '<0.0001'
+    # if pvalue < 0.0001:
+    #     return '<0.0001'
     return '{:.4f}'.format(pvalue)
 
 
