@@ -595,8 +595,12 @@ def export_tex(results, output_path, name, go_type_long,
         output_file.write(footer)
 
 
-def compile_tex(output_path, lualatex_path=LUALATEX_PATH):
-    run_child_process([lualatex_path, output_path], remove_log=True)
+def compile_tex(output_path, output_dir_path=OUTPUT_DIR_PATH,
+                lualatex_path=LUALATEX_PATH):
+    lualatex_cmd = [lualatex_path,
+                    '--output-directory=' + output_dir_path,
+                    output_path]
+    run_child_process(lualatex_cmd, remove_log=True)
 
 
 def export_results(results, name, go_type, go_type_long, seqids, descriptions,
@@ -618,7 +622,7 @@ def export_results(results, name, go_type, go_type_long, seqids, descriptions,
         output_path = output_path_base + '.tex'
         export_tex(results, output_path, name, go_type_long)
         if PDF in output_types:
-            compile_tex(output_path, lualatex_path)
+            compile_tex(output_path, output_dir_path, lualatex_path)
 
 
 def main(args):
