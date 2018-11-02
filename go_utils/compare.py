@@ -210,6 +210,10 @@ def add_arguments(parser):
     other_group.add_argument(
         '--lualatex_path', metavar='PATH', default=LUALATEX_PATH,
         help='Path to the LuaLaTeX executable [{}].'.format(LUALATEX_PATH))
+    other_group.add_argument(
+        '--export_level_one_seqids', action='store_true',
+        help='Add seqids for level 1 annotations when --table_with_seqids or '
+             '--table_with_seqids_expanded options are used.')
 
 
 def check_arguments(args):
@@ -512,7 +516,8 @@ def export_table(results, output_path):
                 table.writerow(results[level][key])
 
 
-def export_table_with_seqids(results, seqids, output_path):
+def export_table_with_seqids(results, seqids, output_path,
+                             export_level_one_seqids):
     with open_file(output_path, 'w') as output_file:
         table = csv.writer(output_file, dialect='excel-tab')
         header = ['GO ID', 'Term', 'Level', 'Ref. count', 'Ref. perc.',
@@ -523,13 +528,13 @@ def export_table_with_seqids(results, seqids, output_path):
             for key in sorted(results[level]):
                 row = list(results[level][key])
                 go_id = row[0]
-                if level > 1:
+                if level > 1 or export_level_one_seqids:
                     row += [', '.join(sorted(seqids[go_id]))]
                 table.writerow(row)
 
 
 def export_table_with_seqids_expanded(results, seqids, descriptions,
-                                      output_path):
+                                      output_path, export_level_one_seqids):
     with open_file(output_path, 'w') as output_file:
         table = csv.writer(output_file, dialect='excel-tab')
         header = ['GO ID', 'Term', 'Level', 'Ref. count', 'Ref. perc.',
@@ -543,8 +548,11 @@ def export_table_with_seqids_expanded(results, seqids, descriptions,
                 row = results[level][key]
                 go_id = row[0]
 
+                if level < 2 and not export_level_one_seqids:
+                    table.writerow(row)
+                    continue
                 lcl_seqids = seqids.get(go_id, None)
-                if lcl_seqids is None or level < 2:
+                if lcl_seqids is None:
                     table.writerow(row)
                     continue
                 lcl_seqids.sort()
@@ -604,8 +612,8 @@ def compile_tex(output_path, output_dir_path=OUTPUT_DIR_PATH,
 
 
 def export_results(results, name, go_type, go_type_long, seqids, descriptions,
-                   output_dir_path=OUTPUT_DIR_PATH, output_types=OUTPUT_TYPES,
-                   lualatex_path=LUALATEX_PATH):
+                   export_level_one_seqids, output_dir_path=OUTPUT_DIR_PATH,
+                   output_types=OUTPUT_TYPES, lualatex_path=LUALATEX_PATH):
     output_basename = '_'.join(['GO', 'enrichment', name, go_type])
     output_path_base = os.path.join(output_dir_path, output_basename)
     if TABLE in output_types:
@@ -613,11 +621,13 @@ def export_results(results, name, go_type, go_type_long, seqids, descriptions,
         export_table(results, output_path)
     if TABLE_WITH_SEQIDS in output_types:
         output_path = output_path_base + '+seqids.txt'
-        export_table_with_seqids(results, seqids, output_path)
+        export_table_with_seqids(
+            results, seqids, output_path, export_level_one_seqids)
     if TABLE_WITH_SEQIDS_EXPANDED in output_types:
         output_path = output_path_base + '+seqids_exp.txt'
         export_table_with_seqids_expanded(
-            results, seqids, descriptions, output_path)
+            results, seqids, descriptions, output_path,
+            export_level_one_seqids)
     if TEX in output_types or PDF in output_types:
         output_path = output_path_base + '.tex'
         export_tex(results, output_path, name, go_type_long)
@@ -655,7 +665,8 @@ def main(args):
 
             export_results(
                 results, name, go_type, go_type_long, seqids, descriptions,
-                args.output_dir_path, args.output_types, args.lualatex_path)
+                args.export_level_one_seqids, args.output_dir_path,
+                args.output_types, args.lualatex_path)
 
 
 if __name__ == '__main__':
