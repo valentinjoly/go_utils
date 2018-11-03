@@ -143,7 +143,7 @@ def import_annotations(annot_paths, types, levels, obsolete, main_ids,
                 except KeyError:
                     pass
 
-                if go_type == 'biological_main':
+                if go_type == 'biological_process':
                     add_annotation(bp, seqid, go_id, bp_anc, ancestors)
                 elif go_type == 'molecular_function':
                     add_annotation(mf, seqid, go_id, mf_anc, ancestors)
