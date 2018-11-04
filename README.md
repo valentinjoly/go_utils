@@ -3,7 +3,7 @@
 - [Introduction](#introduction)
 - [Installation](#installation)
 - [Usage](#usage)
-  - [Build the internal GO tree with `make_tree`](build-the-internal-go-tree-with-make_tree)
+  - [Build the internal GO tree with `make_tree`](#build-the-internal-go-tree-with-make_tree)
   - [Convert annotation files with `convert`](#convert-annotation-files-with-convert)
   - [Perform enrichment analyses with `compare`](#perform-enrichment-analyses-with-compare)
 - [License](#license)
@@ -112,10 +112,10 @@ The default output is a tab-delimited table that looks like:
 
 | GO ID      | Term               | Level | Ref. count | Ref. perc. | Sample count | Sample perc. | FC  | p-value | Reg. |
 | ---------- | ------------------ | ----- | ---------- | ---------- | ------------ | ------------ | --- | ------- | -----|
-| GO:0008150 | biological_process | 1 | *D* | 100% | *C* | 100% | | | |
-| GO:0000001 | go_description_1   | 2 | *B*<sub>1</sub> |*Q*<sub>1</sub> | *A*<sub>1</sub> | *P*<sub>1</sub> | *FC*<sub>1</sub> | *p*<sub>1</sub> | UP   |
-| GO:0000002 | go_description_2   | 2 | *B*<sub>2</sub> |*Q*<sub>2</sub> | *A*<sub>2</sub> | *P*<sub>2</sub> | *FC*<sub>2</sub> | *p*<sub>2</sub> | DOWN |
-| GO:0000003 | go_description_3   | 3 | *B*<sub>3</sub> |*Q*<sub>3</sub> | *A*<sub>3</sub> | *P*<sub>3</sub> | *FC*<sub>3</sub> | *p*<sub>3</sub> | UP   |
+| GO:0008150 | biological_process | 1 | *R*<sub>top</sub> | 100% | *S*<sub>top</sub> | 100% | | | |
+| GO:0000001 | go_description_1   | 2 | *R*<sub>1</sub> |*Q*<sub>1</sub> | *S*<sub>1</sub> | *P*<sub>1</sub> | *FC*<sub>1</sub> | *p*<sub>1</sub> | UP   |
+| GO:0000002 | go_description_2   | 2 | *R*<sub>2</sub> |*Q*<sub>2</sub> | *S*<sub>2</sub> | *P*<sub>2</sub> | *FC*<sub>2</sub> | *p*<sub>2</sub> | DOWN |
+| GO:0000003 | go_description_3   | 3 | *R*<sub>3</sub> |*Q*<sub>3</sub> | *S*<sub>3</sub> | *P*<sub>3</sub> | *FC*<sub>3</sub> | *p*<sub>3</sub> | UP   |
 
 As with `convert`, the following adjustments are made:
 - GO terms tagged as *obsolete* in the initial `go.obo` file are ignored;
