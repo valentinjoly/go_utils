@@ -131,8 +131,8 @@ def add_arguments(parser):
         action='append', dest='sample_names',
         help='Name of the test sample. [repeat for multiple samples]')
     input_group.add_argument(
-        '-d', '--descriptions_path', metavar='PATH',
-        help='Path to a table of sequence descriptions.')
+        '-i', '--info_path', metavar='PATH',
+        help='Path to a table of sequence information.')
 
     output_group = parser.add_argument_group(
         title='Output parameters [default type: {}]'.format(OUTPUT_TYPE))
@@ -226,8 +226,8 @@ def check_arguments(args):
                              prefix='-t/--tree_path')
     errors += check_file_arg(args.ref_path,
                              prefix='-r/--ref_path')
-    errors += check_file_arg(args.descriptions_path, none_allowed=True,
-                             prefix='-d/--descriptions_path')
+    errors += check_file_arg(args.info_path, none_allowed=True,
+                             prefix='-i/--info_path')
     errors += check_dir_arg(args.output_dir_path, mode='w', create=True,
                             prefix='-o/--output_dir_path')
     errors += check_bin_arg(args.lualatex_path,
@@ -346,15 +346,17 @@ def import_annotations(annot_paths, types, levels, obsolete, main_ids,
     return bp, mf, cc
 
 
-def import_descriptions(descriptions_path):
-    if descriptions_path is None:
+def import_info(info_path):
+    if info_path is None:
         return None
-    descriptions = {}
-    with open_file(descriptions_path) as descriptions_file:
-        for row in csv.reader(descriptions_file, dialect='excel-tab'):
-            seqid, desc = row
-            descriptions[seqid] = desc
-    return descriptions
+    info = {}
+    with open_file(info_path) as info_file:
+        header = next(row)
+        info_header = header[1:]
+        for row in csv.reader(info_file, dialect='excel-tab'):
+            seqid, desc = row[0], row[1:]
+            info[seqid] = desc
+    return info, info_header
 
 
 def count_seqids(sample, annot):
@@ -452,7 +454,7 @@ def format_pvalue(pvalue):
     return '{:.4f}'.format(pvalue)
 
 
-def process_sample(sample, ref, annot, top_go_id, terms, levels, descriptions,
+def process_sample(sample, ref, annot, top_go_id, terms, levels,
                    min_seq_count, min_seq_prop, min_fc, max_pvalue,
                    export_not_reg, export_up_reg, export_down_reg,
                    pvalue_lookup):
@@ -533,21 +535,20 @@ def export_table_with_seqids(results, seqids, output_path,
                 table.writerow(row)
 
 
-def export_table_with_seqids_expanded(results, seqids, descriptions,
+def export_table_with_seqids_expanded(results, seqids, info, info_header,
                                       output_path, export_level_one_seqids):
     with open_file(output_path, 'w') as output_file:
         table = csv.writer(output_file, dialect='excel-tab')
         header = ['GO ID', 'Term', 'Level', 'Ref. count', 'Ref. perc.',
                   'Sample count', 'Sample perc.', 'FC', 'p-value', 'Reg.',
                   'Sequence ID']
-        if descriptions is not None:
-            header += ['Description']
+        if info is not None:
+            header += info_header
         table.writerow(header)
         for level in sorted(results):
             for key in sorted(results[level]):
                 row = results[level][key]
                 go_id = row[0]
-
                 if level < 2 and not export_level_one_seqids:
                     table.writerow(row)
                     continue
@@ -562,10 +563,10 @@ def export_table_with_seqids_expanded(results, seqids, descriptions,
                     else:
                         final_row = [''] * len(row)
                     final_row.append(lcl_seqids[i])
-                    if descriptions is not None:
-                        desc = descriptions.get(lcl_seqids[i], None)
-                        if desc is not None:
-                            final_row.append(desc)
+                    if info is not None:
+                        gene_info = info.get(lcl_seqids[i], None)
+                        if gene_info is not None:
+                            final_row.append(gene_info)
                     table.writerow(final_row)
 
 
@@ -611,9 +612,10 @@ def compile_tex(output_path, output_dir_path=OUTPUT_DIR_PATH,
     run_child_process(lualatex_cmd, remove_log=True)
 
 
-def export_results(results, name, go_type, go_type_long, seqids, descriptions,
-                   export_level_one_seqids, output_dir_path=OUTPUT_DIR_PATH,
-                   output_types=OUTPUT_TYPES, lualatex_path=LUALATEX_PATH):
+def export_results(results, name, go_type, go_type_long, seqids, info,
+                   info_header, export_level_one_seqids,
+                   output_dir_path=OUTPUT_DIR_PATH, output_types=OUTPUT_TYPES,
+                   lualatex_path=LUALATEX_PATH):
     output_basename = '_'.join(['GO', 'enrichment', name, go_type])
     output_path_base = os.path.join(output_dir_path, output_basename)
     if TABLE in output_types:
@@ -626,7 +628,7 @@ def export_results(results, name, go_type, go_type_long, seqids, descriptions,
     if TABLE_WITH_SEQIDS_EXPANDED in output_types:
         output_path = output_path_base + '+seqids_exp.txt'
         export_table_with_seqids_expanded(
-            results, seqids, descriptions, output_path,
+            results, seqids, info, info_header, output_path,
             export_level_one_seqids)
     if TEX in output_types or PDF in output_types:
         output_path = output_path_base + '.tex'
@@ -644,7 +646,7 @@ def main(args):
         ancestors, args.min_level, args.max_level)
 
     samples, names = import_samples(args.sample_paths, args.sample_names)
-    descriptions = import_descriptions(args.descriptions_path)
+    info, info_header = import_info(args.info_path)
 
     ref = import_seqids(args.ref_path)
     refs = subtract_ref(samples, ref)
@@ -659,14 +661,14 @@ def main(args):
         for sample, ref, name in zip(samples, refs, names):
             results, seqids = process_sample(
                 sample, ref, annot, top_go_id, terms, levels,
-                descriptions, args.min_seq_count, args.min_seq_prop,
-                args.min_fold_change, args.max_pvalue, args.not_reg,
-                args.up_reg, args.down_reg, pvalue_lookup)
+                args.min_seq_count, args.min_seq_prop, args.min_fold_change,
+                args.max_pvalue, args.not_reg, args.up_reg, args.down_reg,
+                pvalue_lookup)
 
             export_results(
-                results, name, go_type, go_type_long, seqids, descriptions,
-                args.export_level_one_seqids, args.output_dir_path,
-                args.output_types, args.lualatex_path)
+                results, name, go_type, go_type_long, seqids, info,
+                info_header, args.export_level_one_seqids,
+                args.output_dir_path, args.output_types, args.lualatex_path)
 
 
 if __name__ == '__main__':
