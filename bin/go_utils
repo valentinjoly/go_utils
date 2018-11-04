@@ -3,9 +3,9 @@
 import argparse
 import sys
 
-import go_utils.make_tree
-import go_utils.convert
-import go_utils.compare
+from go_utils.make_tree import add_arguments as add_make_tree_args
+from go_utils.convert import add_arguments as add_convert_args
+from go_utils.compare import add_arguments as add_compare_args
 
 
 def make_parser():
@@ -20,17 +20,17 @@ def make_parser():
     make_tree_subparser = subparsers.add_parser(
         'make_tree', add_help=False,
         help='Make GO tree file.')
-    go_utils.make_tree.add_arguments(make_tree_subparser)
+    add_make_tree_args(make_tree_subparser)
 
     convert_subparser = subparsers.add_parser(
         'convert', add_help=False,
         help='Convert an ANNOT file to a per-sequence TSV table.')
-    go_utils.convert.add_arguments(convert_subparser)
+    add_convert_args(convert_subparser)
 
     compare_subparser = subparsers.add_parser(
         'compare', add_help=False,
         help='Perform GO term enrichment analyses.')
-    go_utils.compare.add_arguments(compare_subparser)
+    add_compare_args(compare_subparser)
 
     return parser
 
