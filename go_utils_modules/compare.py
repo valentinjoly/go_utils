@@ -567,7 +567,7 @@ def export_table_with_seqids_expanded(results, seqids, info, info_header,
                     if info is not None:
                         gene_info = info.get(lcl_seqids[i], None)
                         if gene_info is not None:
-                            final_row.append(gene_info)
+                            final_row += gene_info
                     table.writerow(final_row)
 
 
