@@ -3,9 +3,9 @@
 import argparse
 import sys
 
-from go_utils.make_tree import add_arguments as add_make_tree_args
-from go_utils.convert import add_arguments as add_convert_args
-from go_utils.compare import add_arguments as add_compare_args
+from go_utils_modules.make_tree import add_arguments as add_make_tree_args
+from go_utils_modules.convert import add_arguments as add_convert_args
+from go_utils_modules.compare import add_arguments as add_compare_args
 
 
 def make_parser():

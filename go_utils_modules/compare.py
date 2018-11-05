@@ -6,7 +6,7 @@ import os
 import scipy.stats
 import sys
 
-from go_utils.convert import import_tree
+from go_utils_modules.convert import import_tree
 
 from vjoly import (
     check_bin_arg, check_dir_arg, check_file_arg, check_num_arg, open_file,
