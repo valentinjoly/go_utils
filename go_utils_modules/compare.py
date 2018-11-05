@@ -351,9 +351,10 @@ def import_info(info_path):
         return None
     info = {}
     with open_file(info_path) as info_file:
-        header = next(row)
+        info_table = csv.reader(info_file, dialect='excel-tab')
+        header = next(info_table)
         info_header = header[1:]
-        for row in csv.reader(info_file, dialect='excel-tab'):
+        for row in info_table:
             seqid, desc = row[0], row[1:]
             info[seqid] = desc
     return info, info_header
