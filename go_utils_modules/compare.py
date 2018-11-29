@@ -348,7 +348,7 @@ def import_annotations(annot_paths, types, levels, obsolete, main_ids,
 
 def import_info(info_path):
     if info_path is None:
-        return None
+        return None, None
     info = {}
     with open_file(info_path) as info_file:
         info_table = csv.reader(info_file, dialect='excel-tab')
